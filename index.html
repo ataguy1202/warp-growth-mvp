@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer Cost Calculator | Warp</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-0: #050506;
+            --bg-1: #0a0a0b;
+            --bg-2: #111113;
+            --bg-3: #18181b;
+            --bg-4: #1c1c1f;
+            --bg-5: #222225;
+            --border-1: #1e1e21;
+            --border-2: #27272a;
+            --border-3: #3f3f46;
+            --text-1: #fafafa;
+            --text-2: #d4d4d8;
+            --text-3: #a1a1aa;
+            --text-4: #71717a;
+            --text-5: #52525b;
+            --green: #22c55e;
+            --green-light: #4ade80;
+            --green-dim: rgba(34, 197, 94, 0.10);
+            --green-dim2: rgba(34, 197, 94, 0.06);
+            --blue: #3b82f6;
+            --blue-dim: rgba(59, 130, 246, 0.10);
+            --amber: #f59e0b;
+            --amber-dim: rgba(245, 158, 11, 0.10);
+            --red: #ef4444;
+            --red-dim: rgba(239, 68, 68, 0.10);
+            --purple: #a78bfa;
+            --purple-dim: rgba(167, 139, 250, 0.10);
+            --r: 10px;
+            --r-sm: 6px;
+            --r-lg: 14px;
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.2);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.4), 0 16px 48px rgba(0,0,0,0.3);
+        }
+
+        html { font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { background: var(--bg-0); color: var(--text-1); font-family: var(--sans); line-height: 1.6; min-height: 100vh; overflow-x: hidden; }
+
+        /* Ambient Background */
+        .ambient {
+            position: fixed;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 600px;
+            background: radial-gradient(ellipse, rgba(34, 197, 94, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Nav */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 0 40px; height: 56px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(5, 5, 6, 0.8);
+            backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid var(--border-1);
+        }
+        .nav-left { display: flex; align-items: center; gap: 12px; }
+        .nav-logo {
+            font-weight: 700; font-size: 1.15rem; color: var(--text-1);
+            letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;
+        }
+        .nav-logo svg { width: 24px; height: 24px; }
+        .nav-divider { width: 1px; height: 20px; background: var(--border-2); }
+        .nav-badge {
+            font-family: var(--mono); font-size: 0.6rem; font-weight: 500;
+            color: var(--green); background: var(--green-dim);
+            padding: 3px 8px; border-radius: 4px; letter-spacing: 0.8px; text-transform: uppercase;
+        }
+        .nav-right { display: flex; align-items: center; gap: 6px; }
+        .nav-link {
+            font-size: 0.8rem; color: var(--text-4); text-decoration: none;
+            padding: 6px 12px; border-radius: var(--r-sm); transition: all 0.15s;
+        }
+        .nav-link:hover { color: var(--text-2); background: var(--bg-3); }
+        .nav-cta {
+            font-size: 0.8rem; font-weight: 600; color: var(--bg-0);
+            background: var(--text-1); padding: 7px 16px; border-radius: var(--r);
+            text-decoration: none; transition: all 0.15s; margin-left: 4px;
+        }
+        .nav-cta:hover { opacity: 0.9; }
+
+        /* Hero */
+        .hero {
+            padding: 130px 40px 48px; text-align: center;
+            max-width: 760px; margin: 0 auto; position: relative; z-index: 1;
+        }
+        .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-family: var(--mono); font-size: 0.675rem; font-weight: 500;
+            color: var(--green); letter-spacing: 1.2px; text-transform: uppercase;
+            margin-bottom: 20px; padding: 5px 14px;
+            background: var(--green-dim); border: 1px solid rgba(34,197,94,0.15);
+            border-radius: 20px;
+        }
+        .hero-eyebrow .dot { width: 5px; height: 5px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .hero h1 {
+            font-size: 3.5rem; font-weight: 800; line-height: 1.05;
+            letter-spacing: -2px; margin-bottom: 20px;
+        }
+        .hero h1 .line2 {
+            background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 50%, #86efac 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero p {
+            font-size: 1.05rem; color: var(--text-3); max-width: 520px;
+            margin: 0 auto; line-height: 1.7; font-weight: 400;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex; justify-content: center; gap: 40px;
+            padding: 32px 40px 48px; position: relative; z-index: 1;
+        }
+        .stat-item { text-align: center; }
+        .stat-value {
+            font-family: var(--mono); font-size: 1.4rem; font-weight: 600;
+            color: var(--text-1); letter-spacing: -0.5px;
+        }
+        .stat-label { font-size: 0.7rem; color: var(--text-5); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+        /* Main Layout */
+        .main { max-width: 1200px; margin: 0 auto; padding: 0 40px 80px; position: relative; z-index: 1; }
+        .app-grid { display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start; }
+
+        /* Input Panel */
+        .panel {
+            background: var(--bg-2); border: 1px solid var(--border-1);
+            border-radius: var(--r-lg); overflow: hidden;
+        }
+        .panel-header {
+            padding: 16px 22px; border-bottom: 1px solid var(--border-1);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .panel-title {
+            font-size: 0.75rem; font-weight: 600; color: var(--text-4);
+            text-transform: uppercase; letter-spacing: 0.8px;
+        }
+        .panel-body { padding: 22px; }
+        .input-panel { position: sticky; top: 72px; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-label {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.775rem; font-weight: 500; color: var(--text-3); margin-bottom: 7px;
+        }
+        .form-label .hint { font-size: 0.675rem; color: var(--text-5); font-weight: 400; }
+        .form-input {
+            width: 100%; padding: 9px 13px;
+            background: var(--bg-3); border: 1px solid var(--border-2);
+            border-radius: var(--r-sm); color: var(--text-1);
+            font-family: var(--mono); font-size: 0.825rem;
+            transition: all 0.15s; outline: none;
+        }
+        .form-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px var(--green-dim); }
+        .form-input::placeholder { color: var(--text-5); }
+        select.form-input {
+            cursor: pointer; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;
+        }
+
+        /* Range Slider */
+        .range-row { display: flex; align-items: center; gap: 12px; }
+        .range-row input[type="range"] {
+            flex: 1; -webkit-appearance: none; height: 4px;
+            background: var(--border-2); border-radius: 2px; outline: none;
+        }
+        .range-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px;
+            background: var(--green); border-radius: 50%; cursor: pointer;
+            border: 2px solid var(--bg-2);
+            box-shadow: 0 0 0 3px var(--green-dim);
+        }
+        .range-value {
+            font-family: var(--mono); font-size: 0.8rem; font-weight: 600;
+            color: var(--text-1); min-width: 28px; text-align: right;
+        }
+
+        /* State Selection */
+        .state-controls { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+        .state-ctrl-btn {
+            font-size: 0.625rem; font-weight: 600; font-family: var(--sans);
+            color: var(--text-5); background: var(--bg-4); border: 1px solid var(--border-2);
+            border-radius: 4px; padding: 3px 8px; cursor: pointer; transition: all 0.12s;
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .state-ctrl-btn:hover { color: var(--text-3); border-color: var(--border-3); }
+        .state-ctrl-btn.active { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+
+        .state-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+            max-height: 192px; overflow-y: auto; padding: 2px;
+        }
+        .state-grid::-webkit-scrollbar { width: 3px; }
+        .state-grid::-webkit-scrollbar-track { background: transparent; }
+        .state-grid::-webkit-scrollbar-thumb { background: var(--border-3); border-radius: 2px; }
+        .state-chip {
+            padding: 5px 0; font-size: 0.675rem; font-weight: 600; font-family: var(--mono);
+            color: var(--text-5); background: var(--bg-3); border: 1px solid transparent;
+            border-radius: 4px; cursor: pointer; transition: all 0.1s; text-align: center; user-select: none;
+        }
+        .state-chip:hover { color: var(--text-3); background: var(--bg-4); }
+        .state-chip.selected { background: var(--green-dim); border-color: rgba(34,197,94,0.3); color: var(--green); }
+        .selected-count {
+            font-family: var(--mono); font-size: 0.65rem; color: var(--text-5);
+        }
+        .selected-count span { color: var(--green); }
+
+        /* CTA Button */
+        .btn-calculate {
+            width: 100%; padding: 12px; margin-top: 6px;
+            background: linear-gradient(135deg, var(--green) 0%, #16a34a 100%);
+            color: #fff; font-family: var(--sans); font-size: 0.85rem; font-weight: 600;
+            border: none; border-radius: var(--r); cursor: pointer;
+            transition: all 0.2s; position: relative; overflow: hidden;
+        }
+        .btn-calculate:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(34,197,94,0.3); }
+        .btn-calculate:active { transform: translateY(0); }
+        .btn-calculate.loading { pointer-events: none; }
+        .btn-calculate.loading::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            animation: shimmer 1s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        /* Results */
+        .results-panel { min-height: 400px; display: flex; flex-direction: column; gap: 16px; }
+
+        .results-empty {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 1px dashed var(--border-2); border-radius: var(--r-lg); padding: 48px;
+            text-align: center; min-height: 400px;
+        }
+        .results-empty .icon-wrap {
+            width: 56px; height: 56px; border-radius: 14px;
+            background: var(--bg-3); display: flex; align-items: center; justify-content: center;
+            margin-bottom: 16px;
+        }
+        .results-empty .icon-wrap svg { width: 24px; height: 24px; color: var(--text-5); }
+        .results-empty h3 { font-size: 0.9rem; font-weight: 600; color: var(--text-3); margin-bottom: 6px; }
+        .results-empty p { font-size: 0.775rem; color: var(--text-5); max-width: 280px; }
+
+        /* Metric Cards */
+        .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .metric-card {
+            background: var(--bg-2); border: 1px solid var(--border-1);
+            border-radius: var(--r); padding: 18px 16px; position: relative; overflow: hidden;
+        }
+        .metric-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        }
+        .metric-card.green::before { background: var(--green); }
+        .metric-card.blue::before { background: var(--blue); }
+        .metric-card.amber::before { background: var(--amber); }
+        .metric-card.purple::before { background: var(--purple); }
+        .metric-label {
+            font-size: 0.65rem; font-weight: 600; color: var(--text-5);
+            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+        }
+        .metric-value {
+            font-family: var(--mono); font-size: 1.35rem; font-weight: 700;
+            color: var(--text-1); letter-spacing: -0.5px;
+        }
+        .metric-sub { font-size: 0.675rem; color: var(--text-5); margin-top: 4px; }
+        .metric-card.green .metric-value { color: var(--green); }
+
+        /* Chart Section */
+        .chart-section {
+            background: var(--bg-2); border: 1px solid var(--border-1);
+            border-radius: var(--r-lg); overflow: hidden;
+        }
+        .chart-header {
+            padding: 16px 20px; border-bottom: 1px solid var(--border-1);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .chart-title { font-size: 0.8rem; font-weight: 600; color: var(--text-2); }
+        .chart-tabs { display: flex; gap: 2px; background: var(--bg-3); border-radius: 6px; padding: 2px; }
+        .chart-tab {
+            font-size: 0.675rem; font-weight: 500; font-family: var(--sans);
+            color: var(--text-5); background: transparent; border: none;
+            padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: all 0.12s;
+        }
+        .chart-tab.active { color: var(--text-1); background: var(--bg-5); }
+        .chart-tab:hover:not(.active) { color: var(--text-3); }
+
+        .chart-body { padding: 20px; }
+
+        /* Bar Chart */
+        .bar-chart { display: flex; flex-direction: column; gap: 6px; }
+        .bar-row {
+            display: grid; grid-template-columns: 60px 1fr 80px; gap: 12px;
+            align-items: center; padding: 4px 0; cursor: pointer;
+            border-radius: var(--r-sm); transition: background 0.1s;
+        }
+        .bar-row:hover { background: var(--bg-3); margin: 0 -8px; padding: 4px 8px; }
+        .bar-label {
+            font-size: 0.75rem; font-weight: 600; color: var(--text-3);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .bar-label .rank {
+            font-family: var(--mono); font-size: 0.6rem; color: var(--text-5);
+            width: 16px; text-align: right;
+        }
+        .bar-track { height: 28px; background: var(--bg-3); border-radius: 4px; overflow: hidden; position: relative; }
+        .bar-fill {
+            height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; display: flex; align-items: center; padding-left: 10px;
+            min-width: 2px;
+        }
+        .bar-fill.tier-low { background: linear-gradient(90deg, var(--green-dim) 0%, rgba(34,197,94,0.2) 100%); }
+        .bar-fill.tier-mid { background: linear-gradient(90deg, var(--amber-dim) 0%, rgba(245,158,11,0.2) 100%); }
+        .bar-fill.tier-high { background: linear-gradient(90deg, var(--red-dim) 0%, rgba(239,68,68,0.2) 100%); }
+        .bar-fill-label {
+            font-family: var(--mono); font-size: 0.625rem; font-weight: 600;
+            white-space: nowrap; position: absolute; left: 8px;
+        }
+        .bar-fill.tier-low .bar-fill-label { color: var(--green); }
+        .bar-fill.tier-mid .bar-fill-label { color: var(--amber); }
+        .bar-fill.tier-high .bar-fill-label { color: var(--red); }
+        .bar-amount {
+            font-family: var(--mono); font-size: 0.775rem; font-weight: 600;
+            color: var(--text-2); text-align: right;
+        }
+
+        /* Composition Chart */
+        .composition-section {
+            background: var(--bg-2); border: 1px solid var(--border-1);
+            border-radius: var(--r-lg); overflow: hidden;
+        }
+        .composition-body { padding: 20px; display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: center; }
+        .donut-wrap { position: relative; width: 200px; height: 200px; }
+        .donut-center {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .donut-center-value { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; color: var(--text-1); }
+        .donut-center-label { font-size: 0.625rem; color: var(--text-5); }
+        .composition-legend { display: flex; flex-direction: column; gap: 8px; }
+        .legend-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 12px; border-radius: var(--r-sm); transition: background 0.1s;
+        }
+        .legend-item:hover { background: var(--bg-3); }
+        .legend-left { display: flex; align-items: center; gap: 10px; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+        .legend-name { font-size: 0.775rem; color: var(--text-3); }
+        .legend-value { font-family: var(--mono); font-size: 0.775rem; font-weight: 600; color: var(--text-2); }
+        .legend-pct { font-family: var(--mono); font-size: 0.65rem; color: var(--text-5); margin-left: 6px; }
+
+        /* Compliance Score */
+        .compliance-section {
+            background: var(--bg-2); border: 1px solid var(--border-1);
+            border-radius: var(--r-lg); overflow: hidden;
+        }
+        .compliance-grid { padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+        .compliance-card {
+            padding: 14px; border-radius: var(--r-sm); background: var(--bg-3);
+            border: 1px solid var(--border-1); cursor: pointer; transition: all 0.15s;
+        }
+        .compliance-card:hover { border-color: var(--border-3); transform: translateY(-1px); }
+        .compliance-card-state {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+        }
+        .compliance-card-code { font-family: var(--mono); font-size: 0.8rem; font-weight: 700; color: var(--text-1); }
+        .compliance-score {
+            font-family: var(--mono); font-size: 0.625rem; font-weight: 600;
+            padding: 2px 6px; border-radius: 3px;
+        }
+        .score-simple { color: var(--green); background: var(--green-dim); }
+        .score-moderate { color: var(--amber); background: var(--amber-dim); }
+        .score-complex { color: var(--red); background: var(--red-dim); }
+        .compliance-card-name { font-size: 0.675rem; color: var(--text-5); margin-bottom: 6px; }
+        .compliance-card-bar { height: 3px; background: var(--bg-5); border-radius: 2px; overflow: hidden; }
+        .compliance-card-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+
+        /* Detail Modal */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
+            z-index: 200; align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg-2); border: 1px solid var(--border-2);
+            border-radius: var(--r-lg); width: 520px; max-height: 85vh;
+            overflow-y: auto; box-shadow: var(--shadow-lg);
+        }
+        .modal::-webkit-scrollbar { width: 4px; }
+        .modal::-webkit-scrollbar-track { background: transparent; }
+        .modal::-webkit-scrollbar-thumb { background: var(--border-3); border-radius: 2px; }
+        .modal-header {
+            padding: 20px 24px; border-bottom: 1px solid var(--border-1);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .modal-header h3 { font-size: 1rem; font-weight: 700; letter-spacing: -0.3px; }
+        .modal-header .modal-subtitle { font-size: 0.725rem; color: var(--text-5); margin-top: 2px; }
+        .modal-close {
+            width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+            background: var(--bg-4); border: 1px solid var(--border-2); border-radius: 6px;
+            color: var(--text-4); cursor: pointer; transition: all 0.12s; font-size: 0.8rem;
+        }
+        .modal-close:hover { color: var(--text-1); border-color: var(--border-3); }
+        .modal-body { padding: 20px 24px; }
+        .modal-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 9px 0; border-bottom: 1px solid var(--border-1);
+        }
+        .modal-row:last-child { border-bottom: none; }
+        .modal-row .label { font-size: 0.8rem; color: var(--text-3); }
+        .modal-row .value { font-family: var(--mono); font-size: 0.8rem; font-weight: 500; color: var(--text-2); }
+        .modal-row.total-row {
+            padding-top: 14px; margin-top: 6px; border-top: 2px solid var(--border-2); border-bottom: none;
+        }
+        .modal-row.total-row .label, .modal-row.total-row .value {
+            font-weight: 700; color: var(--text-1); font-size: 0.875rem;
+        }
+        .modal-row.note .label { font-size: 0.725rem; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border-1); }
+
+        /* CTA */
+        .cta-section {
+            background: var(--bg-2); border: 1px solid var(--border-1);
+            border-radius: var(--r-lg); padding: 32px;
+            display: flex; align-items: center; justify-content: space-between; gap: 24px;
+            position: relative; overflow: hidden;
+        }
+        .cta-section::before {
+            content: ''; position: absolute; top: 0; right: 0;
+            width: 300px; height: 100%;
+            background: radial-gradient(ellipse at right, var(--green-dim2) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .cta-text h3 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 6px; }
+        .cta-text p { font-size: 0.8rem; color: var(--text-4); line-height: 1.6; }
+        .cta-actions { display: flex; gap: 8px; flex-shrink: 0; position: relative; }
+        .btn-primary {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--green) 0%, #16a34a 100%);
+            color: #fff; font-family: var(--sans); font-size: 0.825rem; font-weight: 600;
+            border: none; border-radius: var(--r); cursor: pointer; transition: all 0.15s;
+            text-decoration: none;
+        }
+        .btn-primary:hover { box-shadow: 0 4px 16px rgba(34,197,94,0.25); transform: translateY(-1px); }
+        .btn-secondary {
+            padding: 10px 20px; background: var(--bg-4);
+            color: var(--text-3); font-family: var(--sans); font-size: 0.825rem; font-weight: 500;
+            border: 1px solid var(--border-2); border-radius: var(--r); cursor: pointer; transition: all 0.12s;
+        }
+        .btn-secondary:hover { color: var(--text-1); border-color: var(--border-3); }
+
+        /* Footer */
+        .footer {
+            padding: 32px 40px; text-align: center;
+            border-top: 1px solid var(--border-1); margin-top: 24px;
+        }
+        .footer p { font-size: 0.7rem; color: var(--text-5); }
+        .footer a { color: var(--green); text-decoration: none; }
+
+        /* Animations */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp 0.4s ease forwards; }
+        .fade-up-d1 { animation-delay: 0.05s; opacity: 0; }
+        .fade-up-d2 { animation-delay: 0.1s; opacity: 0; }
+        .fade-up-d3 { animation-delay: 0.15s; opacity: 0; }
+        .fade-up-d4 { animation-delay: 0.2s; opacity: 0; }
+
+        /* Counter animation */
+        .counting { transition: none; }
+
+        /* Responsive */
+        @media (max-width: 960px) {
+            .app-grid { grid-template-columns: 1fr; }
+            .input-panel { position: static; }
+            .metrics-row { grid-template-columns: repeat(2, 1fr); }
+            .hero h1 { font-size: 2.5rem; }
+            .composition-body { grid-template-columns: 1fr; justify-items: center; }
+            .stats-bar { gap: 24px; }
+            .cta-section { flex-direction: column; text-align: center; }
+        }
+        @media (max-width: 600px) {
+            .nav { padding: 0 20px; }
+            .hero { padding: 120px 20px 40px; }
+            .main { padding: 0 20px 60px; }
+            .metrics-row { grid-template-columns: 1fr; }
+            .stats-bar { flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ambient"></div>
+
+<nav class="nav">
+    <div class="nav-left">
+        <div class="nav-logo">
+            <svg viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="5" fill="#22c55e"/><path d="M6 12.5L10 16.5L18 8" stroke="#050506" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Warp
+        </div>
+        <div class="nav-divider"></div>
+        <span class="nav-badge">Growth Tool</span>
+    </div>
+    <div class="nav-right">
+        <a href="#calculator" class="nav-link">Calculator</a>
+        <a href="#methodology" class="nav-link">Methodology</a>
+        <a href="https://www.warp.co" class="nav-cta">Get Warp</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="hero-eyebrow"><span class="dot"></span> Multi-State Employer Cost Calculator</div>
+    <h1>Know your true cost<br><span class="line2">before you hire</span></h1>
+    <p>Estimate total employer obligations across every state. Taxes, insurance, compliance costs, and hidden fees calculated in seconds.</p>
+</section>
+
+<div class="stats-bar">
+    <div class="stat-item"><div class="stat-value">50</div><div class="stat-label">States Covered</div></div>
+    <div class="stat-item"><div class="stat-value">12</div><div class="stat-label">Tax Categories</div></div>
+    <div class="stat-item"><div class="stat-value">6</div><div class="stat-label">Industries</div></div>
+    <div class="stat-item"><div class="stat-value">2025</div><div class="stat-label">Tax Year Data</div></div>
+</div>
+
+<section class="main" id="calculator">
+    <div class="app-grid">
+        <div class="input-panel panel">
+            <div class="panel-header">
+                <span class="panel-title">Configure Estimate</span>
+                <span class="selected-count" id="selectedCount">0 selected</span>
+            </div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label class="form-label">Annual Salary<span class="hint">per employee</span></label>
+                    <input type="text" class="form-input" id="salary" placeholder="$85,000" value="85000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Headcount<span class="hint" id="headcountHint">10 employees</span></label>
+                    <div class="range-row">
+                        <input type="range" id="headcount" min="1" max="200" value="10">
+                        <span class="range-value" id="headcountVal">10</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Industry</label>
+                    <select class="form-input" id="industry">
+                        <option value="tech">Technology / Software</option>
+                        <option value="finance">Finance / Insurance</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="retail">Retail / E-Commerce</option>
+                        <option value="manufacturing">Manufacturing</option>
+                        <option value="consulting">Professional Services</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">States<span class="hint" id="stateHint">click to select</span></label>
+                    <div class="state-controls">
+                        <button class="state-ctrl-btn" onclick="selectPreset('hubs')">Tech Hubs</button>
+                        <button class="state-ctrl-btn" onclick="selectPreset('low')">Low Cost</button>
+                        <button class="state-ctrl-btn" onclick="selectPreset('noIncome')">No Income Tax</button>
+                        <button class="state-ctrl-btn" onclick="selectPreset('all')">All 50</button>
+                        <button class="state-ctrl-btn" onclick="clearStates()">Clear</button>
+                    </div>
+                    <div class="state-grid" id="stateGrid"></div>
+                </div>
+                <button class="btn-calculate" id="calcBtn" onclick="calculate()">Calculate Employer Costs</button>
+            </div>
+        </div>
+
+        <div class="results-panel" id="resultsPanel">
+            <div class="results-empty">
+                <div class="icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 6-8"/>
+                    </svg>
+                </div>
+                <h3>No data yet</h3>
+                <p>Select states and run the calculator to see a full cost analysis across jurisdictions.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" id="modal"></div>
+</div>
+
+<footer class="footer">
+    <p>Built as a growth engineering prototype for <a href="https://www.warp.co">Warp</a>. Reflects 2025 federal and state employer tax rates. Estimates are approximate and do not constitute tax advice.</p>
+</footer>
+
+<script>
+const S = {
+    AL:{n:"Alabama",suta:.027,sutaWB:8000,wc:1.08,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:3},
+    AK:{n:"Alaska",suta:.021,sutaWB:47100,wc:1.74,sit:0,local:0,sdi:0,pfml:0,extra:0,complexity:4},
+    AZ:{n:"Arizona",suta:.02,sutaWB:8000,wc:.86,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    AR:{n:"Arkansas",suta:.032,sutaWB:7000,wc:1.05,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:3},
+    CA:{n:"California",suta:.034,sutaWB:7000,wc:1.45,sit:1,local:0,sdi:.011,pfml:0,extra:0,complexity:8},
+    CO:{n:"Colorado",suta:.017,sutaWB:23800,wc:.82,sit:1,local:0,sdi:0,pfml:.0045,extra:0,complexity:5},
+    CT:{n:"Connecticut",suta:.031,sutaWB:25000,wc:1.48,sit:1,local:0,sdi:0,pfml:.005,extra:0,complexity:6},
+    DE:{n:"Delaware",suta:.025,sutaWB:10500,wc:1.22,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:3},
+    FL:{n:"Florida",suta:.027,sutaWB:7000,wc:.94,sit:0,local:0,sdi:0,pfml:0,extra:0,complexity:1},
+    GA:{n:"Georgia",suta:.024,sutaWB:9500,wc:1.06,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    HI:{n:"Hawaii",suta:.036,sutaWB:59100,wc:1.92,sit:1,local:0,sdi:.005,pfml:0,extra:0,complexity:5},
+    ID:{n:"Idaho",suta:.021,sutaWB:53500,wc:1.01,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    IL:{n:"Illinois",suta:.034,sutaWB:13590,wc:1.18,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:4},
+    IN:{n:"Indiana",suta:.025,sutaWB:9500,wc:.78,sit:1,local:1,sdi:0,pfml:0,extra:0,complexity:4},
+    IA:{n:"Iowa",suta:.021,sutaWB:38200,wc:1.15,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:3},
+    KS:{n:"Kansas",suta:.024,sutaWB:14000,wc:1.02,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    KY:{n:"Kentucky",suta:.027,sutaWB:11400,wc:1.08,sit:1,local:1,sdi:0,pfml:0,extra:0,complexity:4},
+    LA:{n:"Louisiana",suta:.021,sutaWB:7700,wc:1.28,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:3},
+    ME:{n:"Maine",suta:.026,sutaWB:12000,wc:1.31,sit:1,local:0,sdi:0,pfml:.005,extra:0,complexity:4},
+    MD:{n:"Maryland",suta:.024,sutaWB:8500,wc:1.15,sit:1,local:1,sdi:0,pfml:.0075,extra:0,complexity:6},
+    MA:{n:"Massachusetts",suta:.029,sutaWB:15000,wc:1.12,sit:1,local:0,sdi:0,pfml:.0052,extra:0,complexity:6},
+    MI:{n:"Michigan",suta:.027,sutaWB:9500,wc:1.04,sit:1,local:1,sdi:0,pfml:0,extra:0,complexity:4},
+    MN:{n:"Minnesota",suta:.028,sutaWB:42000,wc:1.14,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:4},
+    MS:{n:"Mississippi",suta:.024,sutaWB:14000,wc:1.1,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    MO:{n:"Missouri",suta:.023,sutaWB:10500,wc:1.08,sit:1,local:1,sdi:0,pfml:0,extra:0,complexity:4},
+    MT:{n:"Montana",suta:.024,sutaWB:43000,wc:1.35,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:3},
+    NE:{n:"Nebraska",suta:.021,sutaWB:9000,wc:1.08,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    NV:{n:"Nevada",suta:.029,sutaWB:40600,wc:1.02,sit:0,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    NH:{n:"New Hampshire",suta:.025,sutaWB:14000,wc:1.18,sit:0,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    NJ:{n:"New Jersey",suta:.034,sutaWB:42300,wc:1.38,sit:1,local:0,sdi:.006,pfml:.0028,extra:0,complexity:7},
+    NM:{n:"New Mexico",suta:.021,sutaWB:30800,wc:1.05,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    NY:{n:"New York",suta:.039,sutaWB:12500,wc:1.52,sit:1,local:1,sdi:.005,pfml:.00455,extra:0,complexity:9},
+    NC:{n:"North Carolina",suta:.021,sutaWB:31400,wc:.92,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    ND:{n:"North Dakota",suta:.018,sutaWB:43800,wc:.88,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:1},
+    OH:{n:"Ohio",suta:.027,sutaWB:9000,wc:.94,sit:1,local:1,sdi:0,pfml:0,extra:0,complexity:5},
+    OK:{n:"Oklahoma",suta:.021,sutaWB:27000,wc:1.22,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    OR:{n:"Oregon",suta:.024,sutaWB:52800,wc:1.28,sit:1,local:1,sdi:0,pfml:.006,extra:.001,complexity:7},
+    PA:{n:"Pennsylvania",suta:.034,sutaWB:10000,wc:1.24,sit:1,local:1,sdi:0,pfml:0,extra:0,complexity:6},
+    RI:{n:"Rhode Island",suta:.029,sutaWB:29200,wc:1.35,sit:1,local:0,sdi:.011,pfml:.0062,extra:0,complexity:6},
+    SC:{n:"South Carolina",suta:.022,sutaWB:14000,wc:1.08,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    SD:{n:"South Dakota",suta:.015,sutaWB:15000,wc:.98,sit:0,local:0,sdi:0,pfml:0,extra:0,complexity:1},
+    TN:{n:"Tennessee",suta:.025,sutaWB:7000,wc:1.01,sit:0,local:0,sdi:0,pfml:0,extra:0,complexity:1},
+    TX:{n:"Texas",suta:.027,sutaWB:9000,wc:.88,sit:0,local:0,sdi:0,pfml:0,extra:0,complexity:1},
+    UT:{n:"Utah",suta:.021,sutaWB:47000,wc:.78,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    VT:{n:"Vermont",suta:.028,sutaWB:16100,wc:1.42,sit:1,local:0,sdi:0,pfml:.006,extra:0,complexity:5},
+    VA:{n:"Virginia",suta:.023,sutaWB:8000,wc:.72,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:2},
+    WA:{n:"Washington",suta:.03,sutaWB:67600,wc:1.38,sit:0,local:0,sdi:0,pfml:.0058,extra:0,complexity:5},
+    WV:{n:"West Virginia",suta:.027,sutaWB:12000,wc:1.18,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:3},
+    WI:{n:"Wisconsin",suta:.025,sutaWB:14000,wc:1.08,sit:1,local:0,sdi:0,pfml:0,extra:0,complexity:3},
+    WY:{n:"Wyoming",suta:.021,sutaWB:30900,wc:.98,sit:0,local:0,sdi:0,pfml:0,extra:0,complexity:1}
+};
+
+const FICA_SS=.062, SS_CAP=168600, FICA_MED=.0145, FUTA=.006, FUTA_CAP=7000;
+const WC_MULT={tech:.6,finance:.5,healthcare:1.8,retail:1.2,manufacturing:2.0,consulting:.5};
+const PRESETS={
+    hubs:['CA','NY','TX','WA','CO','MA'],
+    low:['TX','FL','TN','SD','WY','NH','VA','NC','UT','GA'],
+    noIncome:['AK','FL','NV','NH','SD','TN','TX','WA','WY'],
+};
+
+let selected=new Set(), results=[], sortCol='total', sortDir='asc';
+
+// Init
+function init(){
+    const g=document.getElementById('stateGrid');
+    Object.keys(S).forEach(c=>{
+        const d=document.createElement('div');
+        d.className='state-chip'; d.textContent=c; d.title=S[c].n;
+        d.dataset.code=c; d.onclick=()=>toggle(c,d); g.appendChild(d);
+    });
+    document.getElementById('headcount').addEventListener('input',function(){
+        document.getElementById('headcountVal').textContent=this.value;
+        document.getElementById('headcountHint').textContent=this.value+' employee'+(this.value>1?'s':'');
+    });
+    document.getElementById('salary').addEventListener('input',function(){ this.value=this.value.replace(/[^0-9]/g,''); });
+    updateCount();
+}
+
+function toggle(c,chip){
+    if(selected.has(c)){selected.delete(c);chip.classList.remove('selected');}
+    else{selected.add(c);chip.classList.add('selected');}
+    updateCount();
+}
+
+function selectPreset(key){
+    clearStates();
+    const codes=key==='all'?Object.keys(S):PRESETS[key];
+    codes.forEach(c=>{
+        selected.add(c);
+        const ch=document.querySelector(`.state-chip[data-code="${c}"]`);
+        if(ch) ch.classList.add('selected');
+    });
+    updateCount();
+}
+
+function clearStates(){
+    selected.clear();
+    document.querySelectorAll('.state-chip').forEach(c=>c.classList.remove('selected'));
+    updateCount();
+}
+
+function updateCount(){
+    const el=document.getElementById('selectedCount');
+    el.innerHTML=selected.size>0?`<span>${selected.size}</span> selected`:'0 selected';
+    document.getElementById('stateHint').textContent=selected.size>0?selected.size+' states':'click to select';
+}
+
+function calc(code,salary,industry){
+    const s=S[code], wm=WC_MULT[industry]||1;
+    const ficaSS=Math.min(salary,SS_CAP)*FICA_SS;
+    const ficaMed=salary*FICA_MED;
+    const fica=ficaSS+ficaMed;
+    const futa=Math.min(salary,FUTA_CAP)*FUTA;
+    const suta=Math.min(salary,s.sutaWB)*s.suta;
+    const wc=(salary/100)*s.wc*wm;
+    const sdi=salary*s.sdi;
+    const pfml=salary*s.pfml;
+    const extra=salary*s.extra;
+    const total=fica+futa+suta+wc+sdi+pfml+extra;
+    return{code,name:s.n,salary,fica,ficaSS,ficaMed,futa,suta,sutaWB:s.sutaWB,wc,wcRate:s.wc*wm,sdi,pfml,extra,total,rate:(total/salary)*100,sit:s.sit,local:s.local,complexity:s.complexity};
+}
+
+function calculate(){
+    if(!selected.size) return;
+    const btn=document.getElementById('calcBtn');
+    btn.classList.add('loading'); btn.textContent='Analyzing...';
+
+    setTimeout(()=>{
+        const salary=parseInt(document.getElementById('salary').value)||85000;
+        const hc=parseInt(document.getElementById('headcount').value)||1;
+        const ind=document.getElementById('industry').value;
+
+        results=Array.from(selected).map(c=>calc(c,salary,ind));
+        results.sort((a,b)=>a.total-b.total);
+        render(results,hc);
+
+        btn.classList.remove('loading'); btn.textContent='Calculate Employer Costs';
+    }, 600);
+}
+
+function render(res,hc){
+    const panel=document.getElementById('resultsPanel');
+    const cheapest=res[0], priciest=res[res.length-1];
+    const avg=res.reduce((s,r)=>s+r.total,0)/res.length;
+    const avgRate=res.reduce((s,r)=>s+r.rate,0)/res.length;
+    const spread=priciest.total-cheapest.total;
+    const totalAll=avg*hc;
+    const maxTotal=priciest.total;
+
+    // Composition averages
+    const avgFica=res.reduce((s,r)=>s+r.fica,0)/res.length;
+    const avgSuta=res.reduce((s,r)=>s+r.suta,0)/res.length;
+    const avgWc=res.reduce((s,r)=>s+r.wc,0)/res.length;
+    const avgFuta=res.reduce((s,r)=>s+r.futa,0)/res.length;
+    const avgOther=res.reduce((s,r)=>s+r.sdi+r.pfml+r.extra,0)/res.length;
+    const compTotal=avgFica+avgSuta+avgWc+avgFuta+avgOther;
+
+    const compData=[
+        {label:'FICA (SS + Medicare)',val:avgFica,color:'#22c55e'},
+        {label:'State Unemployment',val:avgSuta,color:'#3b82f6'},
+        {label:'Workers\' Compensation',val:avgWc,color:'#f59e0b'},
+        {label:'Federal Unemployment',val:avgFuta,color:'#a78bfa'},
+        {label:'SDI / PFML / Other',val:avgOther,color:'#ef4444'},
+    ].filter(d=>d.val>0);
+
+    let donutSVG=buildDonut(compData,compTotal);
+
+    panel.innerHTML=`
+        <div class="metrics-row fade-up">
+            <div class="metric-card green">
+                <div class="metric-label">Lowest Cost State</div>
+                <div class="metric-value">${cheapest.name}</div>
+                <div class="metric-sub">${fmt(cheapest.total)}/yr per employee</div>
+            </div>
+            <div class="metric-card blue">
+                <div class="metric-label">Average Employer Cost</div>
+                <div class="metric-value">${fmt(avg)}</div>
+                <div class="metric-sub">${avgRate.toFixed(1)}% effective rate</div>
+            </div>
+            <div class="metric-card amber">
+                <div class="metric-label">State-to-State Spread</div>
+                <div class="metric-value">${fmt(spread)}</div>
+                <div class="metric-sub">${fmt(spread*hc)} across ${hc} headcount</div>
+            </div>
+            <div class="metric-card purple">
+                <div class="metric-label">Total Annual Obligation</div>
+                <div class="metric-value">${fmt(totalAll)}</div>
+                <div class="metric-sub">${hc} employees at avg cost</div>
+            </div>
+        </div>
+
+        <div class="chart-section fade-up fade-up-d1">
+            <div class="chart-header">
+                <span class="chart-title">Cost Comparison by State</span>
+                <div class="chart-tabs">
+                    <button class="chart-tab active" onclick="setSort('total',this)">Total Cost</button>
+                    <button class="chart-tab" onclick="setSort('rate',this)">Tax Rate</button>
+                    <button class="chart-tab" onclick="setSort('complexity',this)">Complexity</button>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="bar-chart" id="barChart">
+                    ${renderBars(res,maxTotal)}
+                </div>
+            </div>
+        </div>
+
+        <div class="composition-section fade-up fade-up-d2">
+            <div class="chart-header">
+                <span class="chart-title">Average Cost Composition</span>
+                <span style="font-family:var(--mono);font-size:0.7rem;color:var(--text-5);">${fmt(compTotal)} total</span>
+            </div>
+            <div class="composition-body">
+                <div class="donut-wrap">
+                    ${donutSVG}
+                    <div class="donut-center">
+                        <div class="donut-center-value">${avgRate.toFixed(1)}%</div>
+                        <div class="donut-center-label">avg rate</div>
+                    </div>
+                </div>
+                <div class="composition-legend">
+                    ${compData.map(d=>`
+                        <div class="legend-item">
+                            <div class="legend-left">
+                                <div class="legend-dot" style="background:${d.color}"></div>
+                                <span class="legend-name">${d.label}</span>
+                            </div>
+                            <div>
+                                <span class="legend-value">${fmt(d.val)}</span>
+                                <span class="legend-pct">${(d.val/compTotal*100).toFixed(0)}%</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+
+        <div class="compliance-section fade-up fade-up-d3">
+            <div class="chart-header">
+                <span class="chart-title">Compliance Complexity by State</span>
+                <span style="font-family:var(--mono);font-size:0.7rem;color:var(--text-5);">click for detail</span>
+            </div>
+            <div class="compliance-grid">
+                ${res.map(r=>{
+                    const lvl=r.complexity<=3?'simple':r.complexity<=6?'moderate':'complex';
+                    const labels={simple:'Simple',moderate:'Moderate',complex:'Complex'};
+                    const colors={simple:'var(--green)',moderate:'var(--amber)',complex:'var(--red)'};
+                    return `
+                    <div class="compliance-card" onclick="showDetail('${r.code}')">
+                        <div class="compliance-card-state">
+                            <span class="compliance-card-code">${r.code}</span>
+                            <span class="compliance-score score-${lvl}">${labels[lvl]}</span>
+                        </div>
+                        <div class="compliance-card-name">${r.name}</div>
+                        <div class="compliance-card-bar">
+                            <div class="compliance-card-bar-fill" style="width:${r.complexity*10}%;background:${colors[lvl]}"></div>
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+
+        <div class="cta-section fade-up fade-up-d4">
+            <div class="cta-text">
+                <h3>Warp handles all of this automatically</h3>
+                <p>Multi-state tax registration, compliance monitoring, and payroll across all 50 states. AI agents navigate government portals so you never have to.</p>
+            </div>
+            <div class="cta-actions">
+                <a href="https://www.warp.co" class="btn-primary">See how Warp works</a>
+                <button class="btn-secondary" onclick="exportCSV()">Export CSV</button>
+            </div>
+        </div>
+    `;
+}
+
+function renderBars(res,maxTotal){
+    return res.map((r,i)=>{
+        const pct=(r.total/maxTotal*100);
+        const tier=r.rate>14?'high':r.rate>11?'mid':'low';
+        return `
+        <div class="bar-row" onclick="showDetail('${r.code}')" style="animation:fadeUp 0.3s ${i*0.03}s ease forwards;opacity:0">
+            <div class="bar-label"><span class="rank">${i+1}</span>${r.code}</div>
+            <div class="bar-track">
+                <div class="bar-fill tier-${tier}" style="width:${pct}%">
+                    <span class="bar-fill-label">${r.rate.toFixed(1)}%</span>
+                </div>
+            </div>
+            <div class="bar-amount">${fmt(r.total)}</div>
+        </div>`;
+    }).join('');
+}
+
+function buildDonut(data,total){
+    const cx=100,cy=100,R=84,r=62;
+    let angle=-90, paths='';
+    data.forEach(d=>{
+        const pct=d.val/total;
+        const a1=angle, a2=angle+pct*360;
+        const large=pct>0.5?1:0;
+        const rad=Math.PI/180;
+        const x1o=cx+R*Math.cos(a1*rad), y1o=cy+R*Math.sin(a1*rad);
+        const x2o=cx+R*Math.cos(a2*rad), y2o=cy+R*Math.sin(a2*rad);
+        const x2i=cx+r*Math.cos(a2*rad), y2i=cy+r*Math.sin(a2*rad);
+        const x1i=cx+r*Math.cos(a1*rad), y1i=cy+r*Math.sin(a1*rad);
+        paths+=`<path d="M${x1o},${y1o} A${R},${R} 0 ${large} 1 ${x2o},${y2o} L${x2i},${y2i} A${r},${r} 0 ${large} 0 ${x1i},${y1i}Z" fill="${d.color}" opacity="0.85"/>`;
+        angle=a2;
+    });
+    return `<svg viewBox="0 0 200 200" style="width:100%;height:100%">${paths}</svg>`;
+}
+
+function setSort(col,btn){
+    document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+    btn.classList.add('active');
+    const sorted=[...results];
+    if(col==='total') sorted.sort((a,b)=>a.total-b.total);
+    else if(col==='rate') sorted.sort((a,b)=>a.rate-b.rate);
+    else if(col==='complexity') sorted.sort((a,b)=>b.complexity-a.complexity);
+    const maxT=Math.max(...sorted.map(r=>r.total));
+    document.getElementById('barChart').innerHTML=renderBars(sorted,maxT);
+}
+
+function showDetail(code){
+    const r=results.find(x=>x.code===code);
+    if(!r) return;
+    const hc=parseInt(document.getElementById('headcount').value)||1;
+    const lvl=r.complexity<=3?'simple':r.complexity<=6?'moderate':'complex';
+    const scoreClass={simple:'score-simple',moderate:'score-moderate',complex:'score-complex'}[lvl];
+    const scoreLabel={simple:'Simple',moderate:'Moderate',complex:'Complex'}[lvl];
+
+    const extras=[];
+    if(r.sdi>0) extras.push({l:'State Disability Insurance',v:r.sdi});
+    if(r.pfml>0) extras.push({l:'Paid Family / Medical Leave',v:r.pfml});
+    if(r.extra>0) extras.push({l:'Transit / Local Surcharges',v:r.extra});
+
+    document.getElementById('modal').innerHTML=`
+        <div class="modal-header">
+            <div>
+                <h3>${r.name} (${r.code}) <span class="compliance-score ${scoreClass}" style="margin-left:6px;vertical-align:middle;">${scoreLabel}</span></h3>
+                <div class="modal-subtitle">Per-employee breakdown at ${fmt(r.salary)} salary</div>
+            </div>
+            <button class="modal-close" onclick="closeModal()">x</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-row"><span class="label">Social Security (6.2% up to $${SS_CAP.toLocaleString()})</span><span class="value">${fmt(r.ficaSS)}</span></div>
+            <div class="modal-row"><span class="label">Medicare (1.45%)</span><span class="value">${fmt(r.ficaMed)}</span></div>
+            <div class="modal-row"><span class="label">Federal Unemployment (FUTA)</span><span class="value">${fmt(r.futa)}</span></div>
+            <div class="modal-row"><span class="label">State Unemployment (SUTA, wage base ${fmt(r.sutaWB)})</span><span class="value">${fmt(r.suta)}</span></div>
+            <div class="modal-row"><span class="label">Workers' Comp ($${r.wcRate.toFixed(2)} per $100)</span><span class="value">${fmt(r.wc)}</span></div>
+            ${extras.map(e=>`<div class="modal-row"><span class="label">${e.l}</span><span class="value">${fmt(e.v)}</span></div>`).join('')}
+            ${r.local?'<div class="modal-row note"><span class="label" style="color:var(--amber)">Local/municipal taxes may apply in certain jurisdictions</span><span class="value" style="color:var(--text-5)">Varies</span></div>':''}
+            ${!r.sit?'<div class="modal-row note"><span class="label" style="color:var(--green)">No state income tax</span><span class="value"></span></div>':''}
+            <div class="modal-row total-row"><span class="label">Total Employer Cost</span><span class="value">${fmt(r.total)}</span></div>
+            <div class="modal-row"><span class="label">Effective employer tax rate</span><span class="value">${r.rate.toFixed(2)}%</span></div>
+            <div class="modal-row"><span class="label">Annual cost for ${hc} employee${hc>1?'s':''}</span><span class="value" style="color:var(--green)">${fmt(r.total*hc)}</span></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" style="width:100%" onclick="closeModal()">Close</button>
+        </div>
+    `;
+    document.getElementById('modalOverlay').classList.add('active');
+}
+
+function closeModal(e){
+    if(!e||e.target===document.getElementById('modalOverlay'))
+        document.getElementById('modalOverlay').classList.remove('active');
+}
+
+function exportCSV(){
+    if(!results.length) return;
+    const hc=parseInt(document.getElementById('headcount').value)||1;
+    let csv='State,Name,FICA,FUTA,SUTA,Workers Comp,SDI/PFML/Other,Total Per Employee,Effective Rate,Total x'+hc+'\n';
+    results.forEach(r=>{
+        csv+=`${r.code},"${r.name}",${r.fica.toFixed(2)},${r.futa.toFixed(2)},${r.suta.toFixed(2)},${r.wc.toFixed(2)},${(r.sdi+r.pfml+r.extra).toFixed(2)},${r.total.toFixed(2)},${r.rate.toFixed(2)}%,${(r.total*hc).toFixed(2)}\n`;
+    });
+    const blob=new Blob([csv],{type:'text/csv'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download='warp-employer-costs.csv'; a.click();
+}
+
+function fmt(n){ return '$'+Math.round(n).toLocaleString('en-US'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+init();
+</script>
+
+</body>
+</html>
